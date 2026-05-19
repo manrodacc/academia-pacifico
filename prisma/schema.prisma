@@ -1,0 +1,152 @@
+datasource db {
+  provider = "mysql"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Usuario {
+  id            Int          @id @default(autoincrement())
+  nombre        String
+  email         String       @unique
+  passwordHash  String       @map("password_hash")
+  rol           String       // "ESTUDIANTE" or "ADMIN"
+  fotoUrl       String?      @map("foto_url")
+  activo        Boolean      @default(true)
+  estudiante    Estudiante?
+  createdAt     DateTime     @default(now()) @map("created_at")
+  updatedAt     DateTime     @updatedAt @map("updated_at")
+
+  @@map("usuarios")
+}
+
+model Estudiante {
+  id              Int              @id @default(autoincrement())
+  usuarioId       Int              @unique @map("usuario_id")
+  usuario         Usuario          @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  dni             String           @unique
+  telefono        String?
+  carreraObjetivo String?          @map("carrera_objetivo")
+  cicloActual     String?          @map("ciclo_actual")
+  matriculas      Matricula[]
+  notas           Nota[]
+  asistencias     Asistencia[]
+  pagos           Pago[]
+  createdAt       DateTime         @default(now()) @map("created_at")
+  updatedAt       DateTime         @updatedAt @map("updated_at")
+
+  @@map("estudiantes")
+}
+
+model Docente {
+  id           Int      @id @default(autoincrement())
+  nombre       String
+  especialidad String?
+  email        String   @unique
+  activo       Boolean  @default(true)
+  cursos       Curso[]
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@map("docentes")
+}
+
+model Curso {
+  id             Int              @id @default(autoincrement())
+  nombre         String
+  area           String?
+  docenteId      Int?             @map("docente_id")
+  docente        Docente?         @relation(fields: [docenteId], references: [id], onDelete: SetNull)
+  activo         Boolean          @default(true)
+  matriculaCurso MatriculaCurso[]
+  horarios       Horario[]
+  notas          Nota[]
+  asistencias    Asistencia[]
+  createdAt      DateTime         @default(now()) @map("created_at")
+  updatedAt      DateTime         @updatedAt @map("updated_at")
+
+  @@map("cursos")
+}
+
+model Matricula {
+  id           Int              @id @default(autoincrement())
+  estudianteId Int              @map("estudiante_id")
+  estudiante   Estudiante       @relation(fields: [estudianteId], references: [id], onDelete: Cascade)
+  ciclo        String
+  fecha        DateTime         @default(now())
+  estado       String           // "ACTIVA", "INACTIVA", etc.
+  cursos       MatriculaCurso[]
+  createdAt    DateTime         @default(now()) @map("created_at")
+  updatedAt    DateTime         @updatedAt @map("updated_at")
+
+  @@map("matriculas")
+}
+
+model MatriculaCurso {
+  id          Int       @id @default(autoincrement())
+  matriculaId Int       @map("matricula_id")
+  matricula   Matricula @relation(fields: [matriculaId], references: [id], onDelete: Cascade)
+  cursoId     Int       @map("curso_id")
+  curso       Curso     @relation(fields: [cursoId], references: [id], onDelete: Cascade)
+
+  @@map("matricula_cursos")
+}
+
+model Horario {
+  id         Int      @id @default(autoincrement())
+  cursoId    Int      @map("curso_id")
+  curso      Curso    @relation(fields: [cursoId], references: [id], onDelete: Cascade)
+  dia        String   // "LUNES", "MARTES", etc.
+  horaInicio String   @map("hora_inicio")
+  horaFin    String   @map("hora_fin")
+  aula       String?
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  @@map("horarios")
+}
+
+model Nota {
+  id           Int        @id @default(autoincrement())
+  estudianteId Int        @map("estudiante_id")
+  estudiante   Estudiante @relation(fields: [estudianteId], references: [id], onDelete: Cascade)
+  cursoId      Int        @map("curso_id")
+  curso        Curso      @relation(fields: [cursoId], references: [id], onDelete: Cascade)
+  tipo         String     // "EXAMEN", "PRACTICA", "TAREA"
+  valor        Float
+  fecha        DateTime   @default(now())
+  createdAt    DateTime   @default(now()) @map("created_at")
+  updatedAt    DateTime   @updatedAt @map("updated_at")
+
+  @@map("notas")
+}
+
+model Asistencia {
+  id           Int        @id @default(autoincrement())
+  estudianteId Int        @map("estudiante_id")
+  estudiante   Estudiante @relation(fields: [estudianteId], references: [id], onDelete: Cascade)
+  cursoId      Int        @map("curso_id")
+  curso        Curso      @relation(fields: [cursoId], references: [id], onDelete: Cascade)
+  fecha        DateTime
+  estado       String     // "ASISTIO", "FALTO", "TARDANZA"
+  createdAt    DateTime   @default(now()) @map("created_at")
+  updatedAt    DateTime   @updatedAt @map("updated_at")
+
+  @@map("asistencia")
+}
+
+model Pago {
+  id           Int        @id @default(autoincrement())
+  estudianteId Int        @map("estudiante_id")
+  estudiante   Estudiante @relation(fields: [estudianteId], references: [id], onDelete: Cascade)
+  concepto     String
+  monto        Float
+  fecha        DateTime
+  estado       String     // "PAGADO", "PENDIENTE", "VENCIDO"
+  metodo       String?    // "EFECTIVO", "TRANSFERENCIA", "TARJETA"
+  createdAt    DateTime   @default(now()) @map("created_at")
+  updatedAt    DateTime   @updatedAt @map("updated_at")
+
+  @@map("pagos")
+}
