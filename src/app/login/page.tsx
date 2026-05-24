@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { Alert } from '@/components/ui/Alert';
 import { Eye, EyeOff } from 'lucide-react';
+import { toast } from 'sonner';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -16,17 +17,51 @@ export default function LoginPage() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password) { setError('Ingresa tu código y contraseña.'); return; }
-    setLoading(true); setError('');
+    console.log('[Login Client] Iniciando intento de login con:', { email, passwordLength: password.length });
+    
+    if (!email || !password) {
+      console.warn('[Login Client] Formulario incompleto: email o contraseña vacíos');
+      setError('Ingresa tu código y contraseña.');
+      toast.error('Por favor, ingresa tu código y contraseña');
+      return;
+    }
+    
+    setLoading(true);
+    setError('');
+    
     try {
-      const res = await fetch('/api/auth', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password }) });
+      console.log('[Login Client] Enviando POST a /api/auth...');
+      const res = await fetch('/api/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      
+      console.log('[Login Client] Respuesta del servidor - HTTP Status:', res.status);
       const data = await res.json();
+      console.log('[Login Client] JSON decodificado del servidor:', data);
+      
       if (res.ok && data.success) {
+        console.log('[Login Client] Autenticación exitosa. Guardando sesión en localStorage...');
         localStorage.setItem('pacifico_user', JSON.stringify(data.user));
-        router.push(data.user.rol === 'ADMIN' ? '/admin/dashboard' : '/estudiante/dashboard');
-      } else { setError(data.error || 'Usuario o contraseña incorrectos. Verifica tus datos.'); }
-    } catch { setError('Error al conectar con el servidor.'); }
-    finally { setLoading(false); }
+        
+        toast.success(`¡Bienvenido de vuelta, ${data.user.nombre || 'usuario'}!`);
+        const targetPath = data.user.rol === 'ADMIN' ? '/admin/dashboard' : '/estudiante/dashboard';
+        console.log('[Login Client] Redirigiendo a:', targetPath);
+        router.push(targetPath);
+      } else {
+        const errorMsg = data.error || 'Usuario o contraseña incorrectos. Verifica tus datos.';
+        console.warn('[Login Client] Error de autenticación:', errorMsg);
+        setError(errorMsg);
+        toast.error('Credenciales incorrectas o acceso denegado');
+      }
+    } catch (err: any) {
+      console.error('[Login Client] Excepción de red o de parseo JSON capturada:', err);
+      setError('Error al conectar con el servidor.');
+      toast.error('Error al conectar con el servidor.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

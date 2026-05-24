@@ -1,5 +1,6 @@
 import React from 'react';
 import './globals.css';
+import { Toaster } from 'sonner';
 import { Plus_Jakarta_Sans } from 'next/font/google';
 
 const jakarta = Plus_Jakarta_Sans({
@@ -18,6 +19,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="es" className={jakarta.variable}>
       <body className="antialiased bg-gray-50 text-gray-900 font-sans">
         {children}
+        <Toaster richColors position="top-right" />
       </body>
     </html>
   );

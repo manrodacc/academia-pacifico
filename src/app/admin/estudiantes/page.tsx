@@ -16,7 +16,7 @@ const alumnos=[
 
 export default function Page() {
   return (<div className="flex flex-col gap-6">
-    <PageHeader title="Estudiantes" action={<Link href="/admin/estudiantes/nuevo"><Button><Plus className="w-4 h-4"/>Nuevo estudiante</Button></Link>}/>
+    <PageHeader title="Estudiantes" />
     <div className="flex gap-3 flex-wrap">
       <div className="relative flex-1 min-w-[200px]"><Search className="w-4 h-4 absolute left-3 top-3 text-gray-400"/><input className="w-full pl-9 pr-4 py-2.5 border border-gray-300 rounded-lg text-sm" placeholder="Buscar por nombre, código o DNI"/></div>
     </div>
